@@ -1,0 +1,75 @@
+import numpy as np
+import pandas as pd
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Embedding
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+df = pd.read_csv("IMDB Dataset.csv") 
+
+print(df.head())
+encoder = LabelEncoder()
+df['sentiment'] = encoder.fit_transform(df['sentiment'])  
+# positive = 1, negative = 0
+tokenizer = Tokenizer(num_words=5000)
+tokenizer.fit_on_texts(df['review'])
+
+X = tokenizer.texts_to_sequences(df['review'])
+X = pad_sequences(X, maxlen=200)
+
+y = df['sentiment']
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+from tensorflow.keras.layers import Input
+
+model = Sequential([
+    Input(shape=(200,)),
+    Embedding(5000, 128),
+    LSTM(64),
+    Dense(1, activation='sigmoid')
+])
+
+model.compile(
+    loss='binary_crossentropy',
+    optimizer='adam',
+    metrics=['accuracy']
+)
+
+model.summary()
+model.fit(
+    X_train, y_train,
+    epochs=5,
+    batch_size=64,
+    validation_data=(X_test, y_test)
+)
+loss, accuracy = model.evaluate(X_test, y_test)
+print("Accuracy:", accuracy)
+sample = ["This movie was absolutely fantastic"]
+
+seq = tokenizer.texts_to_sequences(sample)
+pad = pad_sequences(seq, maxlen=200)
+
+pred = model.predict(pad)
+
+if pred > 0.5:
+    print("Positive Review")
+else:
+    print("Negative Review")
+import matplotlib.pyplot as plt
+
+history = model.fit(
+    X_train, y_train,
+    epochs=5,
+    batch_size=64,
+    validation_data=(X_test, y_test)
+)
+
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend(['Train', 'Validation'])
+plt.show()
