@@ -1,0 +1,67 @@
+!pip install pyspark
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("MapReduceSimulation") \
+    .getOrCreate()
+
+sc = spark.sparkContext
+-------------------------
+Input File
+
+Create a text file (example: input.txt) in same folder:
+
+hello world
+hello hadoop
+big data world
+
+--------------
+🅰️ Character Count using MapReduce (PySpark)
+rdd = sc.textFile("input.txt")
+
+char_counts = (
+    rdd
+    .flatMap(lambda line: list(line))   # break into characters
+    .filter(lambda c: c != " ")         # optional: remove spaces
+    .map(lambda c: (c, 1))              # (char, 1)
+    .reduceByKey(lambda a, b: a + b)    # sum
+)
+
+print("Character Count:")
+for char, count in char_counts.collect():
+    print(f"{char}: {count}")
+
+---------------------------------
+🅱️ Word Count using MapReduce (PySpark)
+rdd = sc.textFile("input.txt")
+
+word_counts = (
+    rdd
+    .flatMap(lambda line: line.split())   # split into words
+    .map(lambda word: (word.lower(), 1))  # normalize + (word,1)
+    .reduceByKey(lambda a, b: a + b)      # sum
+)
+
+print("\nWord Count:")
+for word, count in word_counts.collect():
+    print(f"{word}: {count}")
+
+------------------------------
+🔹 Output Example
+Character Count:
+h: 3
+e: 2
+l: 5
+o: 4
+...
+
+Word Count:
+hello: 2
+world: 2
+hadoop: 1
+big: 1
+data: 1
+
+
+NEED TO INSTALL JAVA
+
