@@ -1,0 +1,73 @@
+# RMI
+import java.rmi.*;
+
+public interface StringConcat extends Remote {
+    String concatenate(String s1, String s2) throws RemoteException;
+}
+
+#Server- Remote object
+import java.rmi.*;
+import java.rmi.server.*;
+
+public class StringConcatImpl extends UnicastRemoteObject implements StringConcat {
+
+    protected StringConcatImpl() throws RemoteException {
+        super();
+    }
+
+    public String concatenate(String s1, String s2) throws RemoteException {
+        return s1 + s2;
+    }
+}
+
+#Server Program
+import java.rmi.*;
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            StringConcat obj = new StringConcatImpl();
+
+            Naming.rebind("rmi://localhost/StringService", obj);
+
+            System.out.println("Server is running...");
+        } catch (Exception e) {
+            System.out.println("Server error: " + e);
+        }
+    }
+}
+
+#Client Program
+import java.rmi.*;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            StringConcat obj = (StringConcat) Naming.lookup("rmi://localhost/StringService");
+
+            String result = obj.concatenate("Hello ", "World!");
+
+            System.out.println("Concatenated String: " + result);
+        } catch (Exception e) {
+            System.out.println("Client error: " + e);
+        }
+    }
+}
+
+#--------------------
+5. Steps to Run the Application
+Step 1: Compile all files
+javac *.java
+
+Step 2: Start RMI Registry
+rmiregistry
+
+Step 3: Run Server
+java Server
+
+Step 4: Run Client
+java Client
+------------------------
+6. Output
+Server is running...
+Concatenated String: Hello World!
